@@ -86,35 +86,21 @@
       background: #ffffff;
       border: 1px solid #e8e0cc;
       border-radius: 8px;
-      padding: 14px 16px;
+      padding: 12px;
       box-shadow: 0 2px 10px rgba(0,0,0,.05);
-      max-width: 100%;
-      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      min-height: 60px;
     }
 
-    pre.ascii {
-      font-family: 'Courier New', Consolas, monospace;
-      font-size: 7px;
-      line-height: 1.0;
-      margin: 0 auto;
-      white-space: pre;
-      color: #1a1a1a;
-      text-align: left;
-      direction: ltr;
+    /* The rendered art canvas — auto-scales to fit the frame */
+    .art-frame canvas {
+      max-width: 100%;
+      height: auto;
       display: block;
-      width: fit-content;
-      max-width: 100%;
-      overflow-x: auto;
-      scrollbar-width: thin;
-    }
-
-    pre.ascii::-webkit-scrollbar {
-      height: 6px;
-      width: 6px;
-    }
-    pre.ascii::-webkit-scrollbar-thumb {
-      background: #d5c9b2;
-      border-radius: 3px;
+      border-radius: 4px;
     }
 
     .copy-btn {
@@ -167,7 +153,7 @@
       .col-id { width: 100%; margin-bottom: 10px; padding-top: 0; }
       .col-content { padding: 0; }
       .col-action { width: 100%; text-align: left; margin-top: 15px; }
-      pre.ascii { font-size: 5.5px; }
+      .art-frame { padding: 8px; }
     }
   </style>
 </head>
@@ -196,8 +182,14 @@
 
   <script>
     const container = document.getElementById('artContainer');
-    const MAX_INDEX = 500;   // highest number to try
-    const MAX_MISSES = 3;    // stop after 3 missing files in a row
+    const MAX_INDEX = 500;
+    const MAX_MISSES = 3;
+
+    // Base font size used when drawing to canvas
+    // Higher = crisper when scaled down, more memory
+    const BASE_FONT_SIZE = 16;
+    const CHAR_W_RATIO = 0.6;   // monospace width per char (Courier New)
+    const LINE_H_RATIO = 1.1;   // line height
 
     async function loadAll() {
       container.innerHTML = '';
@@ -241,10 +233,9 @@
       const frame = document.createElement('div');
       frame.className = 'art-frame';
 
-      const pre = document.createElement('pre');
-      pre.className = 'ascii';
-      pre.textContent = art;
-      frame.appendChild(pre);
+      const canvas = document.createElement('canvas');
+      drawAsciiToCanvas(canvas, art);
+      frame.appendChild(canvas);
       contentCol.appendChild(frame);
 
       const actionCol = document.createElement('div');
@@ -273,6 +264,40 @@
       row.appendChild(contentCol);
       row.appendChild(actionCol);
       container.appendChild(row);
+    }
+
+    // === Core: render ASCII text into a canvas — same approach as Symboles88 ===
+    function drawAsciiToCanvas(canvas, text) {
+      const lines = text.split('\n');
+      const cols = Math.max(1, ...lines.map(l => l.length));
+      const rows = Math.max(1, lines.length);
+
+      const fontSize = BASE_FONT_SIZE;
+      const charH = fontSize * LINE_H_RATIO;
+
+      // Setup temporary context to measure character width precisely
+      const ctx = canvas.getContext('2d');
+      ctx.font = fontSize + 'px "Courier New", Consolas, monospace';
+      const charW = ctx.measureText('M').width || (fontSize * CHAR_W_RATIO);
+
+      // Intrinsic canvas resolution
+      canvas.width = Math.ceil(cols * charW);
+      canvas.height = Math.ceil(rows * charH);
+
+      // Reapply font after resizing the canvas (canvas resize resets context state)
+      ctx.font = fontSize + 'px "Courier New", Consolas, monospace';
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.fillStyle = '#1a1a1a';
+      ctx.textBaseline = 'top';
+
+      // Draw each line as one string — monospace handles spacing automatically
+      for (let y = 0; y < lines.length; y++) {
+        const line = lines[y];
+        if (!line) continue;
+        ctx.fillText(line, 0, y * charH);
+      }
     }
 
     loadAll();
