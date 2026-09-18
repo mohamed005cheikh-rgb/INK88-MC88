@@ -44,7 +44,6 @@
       display: inline-block;
     }
 
-    /* --- تحويل العرض إلى نظام بطاقات تشبه Symboles88 --- */
     .art-card {
       background: #ffffff;
       border: 1px solid #d5c9b2;
@@ -79,7 +78,6 @@
       font-weight: bold;
     }
 
-    /* === الإطار الأبيض الذي يحتوي على الـ Canvas === */
     .art-frame {
       width: 100%;
       background: #ffffff;
@@ -89,7 +87,6 @@
       overflow: hidden;
     }
 
-    /* Canvas يأخذ عرض الإطار ويتجاوب كصورة حقيقية */
     .art-frame canvas {
       max-width: 100%;
       height: auto;
@@ -170,11 +167,6 @@
     const MAX_INDEX = 500;
     const MAX_MISSES = 3;
 
-    // نفس مقاسات ونسب Symboles88 بالضبط
-    const BASE_FONT_SIZE = 12; 
-    const CHAR_W_RATIO = 0.6;   
-    const LINE_H_RATIO = 1.1;   
-
     async function loadAll() {
       container.innerHTML = '';
       let found = 0;
@@ -182,9 +174,11 @@
 
       for (let i = 1; i <= MAX_INDEX && misses < MAX_MISSES; i++) {
         try {
+          // جلب الملف النصي
           const res = await fetch(i + '.txt', { cache: 'no-cache' });
           if (!res.ok) throw new Error('miss');
           const text = (await res.text()).replace(/\r\n/g, '\n');
+          
           if (text.trim().length > 0) {
             renderArt(text.replace(/\n+$/, ''), '#' + String(i).padStart(3, '0'));
             found++;
@@ -204,11 +198,9 @@
     }
 
     function renderArt(art, idStr) {
-      // بناء بطاقة العرض (Card)
       const card = document.createElement('div');
       card.className = 'art-card';
 
-      // الرأس (يحتوي على الرقم وزر النسخ)
       const header = document.createElement('div');
       header.className = 'art-header';
 
@@ -227,16 +219,12 @@
             btn.textContent = 'Copy Text';
             btn.classList.remove('copied');
           }, 1500);
-        }).catch(() => {
-          btn.textContent = 'Failed';
-          setTimeout(() => btn.textContent = 'Copy Text', 1500);
         });
       });
 
       header.appendChild(idSpan);
       header.appendChild(btn);
 
-      // منطقة عرض الـ Canvas (مثل Symboles88)
       const frame = document.createElement('div');
       frame.className = 'art-frame';
 
@@ -249,35 +237,44 @@
       container.appendChild(card);
     }
 
-    // === دالة الرسم باستخدام نفس منطق Symboles88 ===
+    // === دالة الرسم المعدلة (مطابقة تماماً لمنطق Symboles88) ===
     function drawAsciiToCanvas(canvas, text) {
       const lines = text.split('\n');
       const cols = Math.max(1, ...lines.map(l => l.length));
       const rows = Math.max(1, lines.length);
 
-      const fontSize = BASE_FONT_SIZE;
-      const charW = fontSize * CHAR_W_RATIO;
-      const charH = fontSize * LINE_H_RATIO;
+      // نفس المقاسات الموجودة في مشروعك الأول
+      const fontSize = 12;
+      const charWidth = fontSize * 0.6;
+      const charHeight = fontSize * 1.1;
 
       const ctx = canvas.getContext('2d');
 
-      // تحديد أبعاد الـ canvas بناءً على عدد الحروف والأسطر
-      canvas.width = Math.ceil(cols * charW);
-      canvas.height = Math.ceil(rows * charH);
+      canvas.width = Math.ceil(cols * charWidth);
+      canvas.height = Math.ceil(rows * charHeight);
 
-      // إعدادات الخط والألوان
-      ctx.font = `${fontSize}px monospace`;
+      // خلفية بيضاء
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      ctx.fillStyle = '#1a1a1a'; // لون النص (أسود داكن)
-      ctx.textBaseline = 'top';
+      ctx.font = `${fontSize}px monospace`;
+      ctx.fillStyle = '#1a1a1a';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
 
-      // رسم النص سطراً بسطر
-      for (let y = 0; y < lines.length; y++) {
-        const line = lines[y];
-        if (!line) continue;
-        ctx.fillText(line, 0, y * charH);
+      // السر هنا: رسم النص حرفاً بحرف في إحداثيات دقيقة (Grid)
+      for (let y = 0; y < rows; y++) {
+        const line = lines[y] || '';
+        for (let x = 0; x < cols; x++) {
+          const char = line[x];
+          
+          // نتجاهل المسافات الفارغة لتسريع الأداء، ونرسم الرموز فقط في مكانها الصحيح
+          if (char && char !== ' ') {
+            const posX = (x * charWidth) + (charWidth / 2);
+            const posY = (y * charHeight) + (charHeight / 2);
+            ctx.fillText(char, posX, posY);
+          }
+        }
       }
     }
 
