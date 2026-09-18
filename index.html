@@ -34,7 +34,6 @@
             display: flex;
             flex-direction: column;
             overflow-x: hidden;
-            /* Subtle paper texture using radial gradient */
             background-image: radial-gradient(circle at center, #ffffff 0%, var(--bg-paper) 100%);
         }
 
@@ -98,7 +97,6 @@
             position: relative;
         }
 
-        /* Decorative SVG behind title */
         header::before {
             content: '';
             position: absolute;
@@ -151,14 +149,12 @@
             overflow: hidden;
         }
 
-        /* Hover floating effect */
         .art-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 15px 40px rgba(44, 36, 27, 0.12);
             border-color: var(--gold-accent);
         }
 
-        /* Decorative Corner Ornaments */
         .art-card::before, .art-card::after {
             content: '✒';
             position: absolute;
@@ -195,9 +191,9 @@
             color: var(--ink-light);
         }
 
-        /* The ASCII Display - MUST be monospace */
+        /* The ASCII Display */
         .ascii-display {
-            font-family: 'Courier Prime', monospace; /* Monospace for perfect alignment */
+            font-family: 'Courier Prime', monospace;
             font-size: 10px;
             line-height: 10px;
             white-space: pre;
@@ -217,7 +213,7 @@
             }
         }
 
-        /* --- ELEGANT COPY BUTTON --- */
+        /* --- COPY BUTTON --- */
         .btn-copy {
             margin-top: 35px;
             background: transparent;
@@ -261,9 +257,8 @@
 </head>
 <body>
 
-    <!-- 6-SECOND SPLASH SCREEN (Click to skip) -->
+    <!-- SPLASH SCREEN -->
     <div id="splash-screen">
-        <!-- Elegant SVG Feather/Quill Drawing -->
         <svg class="feather-svg" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
             <path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"></path>
             <line x1="16" y1="8" x2="2" y2="22"></line>
@@ -280,27 +275,7 @@
     </header>
 
     <main class="gallery-container" id="gallery">
-        <!-- Cards will be injected here by JavaScript -->
-        
-        <!-- FALLBACK/DEMO CARD (If local files fail to load) -->
-        <noscript>
-            <div class="art-card">
-                <div class="card-header">
-                    <span class="art-number">#001</span>
-                </div>
-                <pre class="ascii-display">
-       ██████████       
-     ██          ██     
-   ██  ██      ██  ██   
-   ██  ██      ██  ██   
-   ██              ██   
-   ██  ██      ██  ██   
-     ██  ██████  ██     
-       ██████████       
-                </pre>
-                <button class="btn-copy">Please Enable Javascript</button>
-            </div>
-        </noscript>
+        <!-- Cards will be dynamically injected here from the 'art' folder -->
     </main>
 
     <footer>
@@ -312,37 +287,29 @@
         // --- SPLASH SCREEN LOGIC ---
         const splashScreen = document.getElementById('splash-screen');
         
-        // Hide splash function
         const hideSplash = () => {
             splashScreen.style.opacity = '0';
             setTimeout(() => {
                 splashScreen.style.display = 'none';
-            }, 1000); // Wait for fade out transition
+            }, 1000); 
         };
 
-        // 1. Auto-hide after 6 seconds
         const splashTimeout = setTimeout(hideSplash, 6000);
-
-        // 2. Click to skip
         splashScreen.addEventListener('click', () => {
-            clearTimeout(splashTimeout); // Cancel the auto-timer
+            clearTimeout(splashTimeout);
             hideSplash();
         });
 
 
-        // --- GALLERY FETCHING LOGIC ---
-        // Define the array of text files to load. Add '3.txt', '4.txt', etc. here.
-        const filesToLoad = ['1.txt', '2.txt'];
+        // --- DYNAMIC GALLERY FETCHING LOGIC ---
         const gallery = document.getElementById('gallery');
 
-        // Function to create a beautifully styled card
         function createCard(idNumber, textContent) {
             const formattedNumber = '#' + String(idNumber).padStart(3, '0');
             
             const card = document.createElement('div');
             card.className = 'art-card';
             
-            // Header
             const header = document.createElement('div');
             header.className = 'card-header';
             const numberSpan = document.createElement('span');
@@ -350,23 +317,19 @@
             numberSpan.textContent = formattedNumber;
             header.appendChild(numberSpan);
 
-            // The Art Display
             const pre = document.createElement('pre');
             pre.className = 'ascii-display';
             pre.textContent = textContent;
 
-            // Copy Button
             const btn = document.createElement('button');
             btn.className = 'btn-copy';
             btn.textContent = 'Copy to Clipboard';
 
-            // Copy Event Listener
             btn.addEventListener('click', () => {
                 navigator.clipboard.writeText(textContent).then(() => {
                     const originalText = btn.textContent;
                     btn.textContent = 'Captured!';
                     btn.style.color = 'var(--gold-accent)';
-                    
                     setTimeout(() => {
                         btn.textContent = originalText;
                         btn.style.color = '';
@@ -377,7 +340,6 @@
                 });
             });
 
-            // Assemble Card
             card.appendChild(header);
             card.appendChild(pre);
             card.appendChild(btn);
@@ -385,28 +347,45 @@
             return card;
         }
 
-        // Fetch all files and build the gallery
+        // Smart loop to fetch files sequentially until it hits a 404 error
         async function loadGallery() {
-            for (let i = 0; i < filesToLoad.length; i++) {
+            let fileIndex = 1;
+            let keepLoading = true;
+
+            while (keepLoading) {
+                // Pointing to the 'art' folder
+                const filePath = `art/${fileIndex}.txt`;
+                
                 try {
-                    const response = await fetch(filesToLoad[i]);
+                    const response = await fetch(filePath);
+                    
                     if (response.ok) {
                         const text = await response.text();
-                        // Ignore empty files
                         if (text.trim().length > 0) {
-                            const card = createCard(i + 1, text);
+                            const card = createCard(fileIndex, text);
                             gallery.appendChild(card);
                         }
+                        fileIndex++; // Move to the next number (1, 2, 3...)
                     } else {
-                        console.warn(`File ${filesToLoad[i]} not found. Skipping.`);
+                        // If file is not found (e.g., 404), stop the loop
+                        keepLoading = false;
                     }
                 } catch (error) {
-                    console.error(`Error loading ${filesToLoad[i]}:`, error);
+                    console.error(`Stopped loading at ${filePath}`, error);
+                    keepLoading = false;
                 }
+            }
+            
+            // If no files were found at all, show a friendly message
+            if (fileIndex === 1) {
+                const emptyMsg = document.createElement('p');
+                emptyMsg.style.textAlign = 'center';
+                emptyMsg.style.fontSize = '2rem';
+                emptyMsg.innerHTML = "The archive is currently empty.<br>Add your first masterpiece to the 'art' folder.";
+                gallery.appendChild(emptyMsg);
             }
         }
 
-        // Initialize fetching
         loadGallery();
     </script>
 </body>
