@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ink88 - ASCII Art</title>
+  <title>ink88 - ASCII Art Gallery</title>
   <style>
     body {
       background-color: #fdf6e3;
@@ -15,87 +15,81 @@
     }
 
     .container {
-      max-width: 900px;
+      max-width: 800px;
       margin: 0 auto;
-      background: #fffefc;
-      border: 1px solid #d5c9b2;
-      padding: 30px;
-      box-shadow: 2px 2px 10px rgba(0,0,0,0.05);
     }
 
     header {
-      border-bottom: 2px solid #2c2c2c;
-      margin-bottom: 20px;
-      padding-bottom: 10px;
       text-align: center;
+      margin-bottom: 40px;
     }
 
     h1 {
-      font-size: 36px;
+      font-size: 42px;
       margin: 0;
       font-weight: normal;
-      letter-spacing: 4px;
+      letter-spacing: 6px;
       text-transform: lowercase;
+      color: #1a1a1a;
     }
 
     .subtitle {
-      font-size: 14px;
+      font-size: 15px;
       color: #7a6a53;
-      letter-spacing: 3px;
+      letter-spacing: 4px;
       text-transform: uppercase;
-      margin-top: 5px;
+      margin-top: 10px;
+      border-bottom: 1px solid #d5c9b2;
+      padding-bottom: 20px;
+      display: inline-block;
     }
 
-    .catalog-header {
+    /* --- تحويل العرض إلى نظام بطاقات تشبه Symboles88 --- */
+    .art-card {
+      background: #ffffff;
+      border: 1px solid #d5c9b2;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 40px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.03);
       display: flex;
-      font-size: 14px;
-      font-weight: bold;
-      color: #7a6a53;
-      border-bottom: 1px solid #2c2c2c;
-      padding-bottom: 5px;
-      margin-bottom: 10px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
+      flex-direction: column;
+      align-items: center;
+      transition: box-shadow 0.3s;
     }
 
-    .col-id { width: 70px; flex-shrink: 0; }
-    .col-content { flex-grow: 1; padding: 0 20px; min-width: 0; }
-    .col-action { width: 110px; flex-shrink: 0; text-align: right; }
+    .art-card:hover {
+      box-shadow: 0 8px 25px rgba(0,0,0,0.06);
+    }
 
-    .art-row {
+    .art-header {
+      width: 100%;
       display: flex;
-      border-bottom: 1px solid #e0d8c8;
-      padding: 24px 0;
-      align-items: flex-start;
-      transition: background 0.2s;
-    }
-
-    .art-row:hover {
-      background-color: #f7f2e6;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 1px dashed #e0d8c8;
     }
 
     .art-id {
       font-family: 'Courier New', monospace;
-      font-size: 14px;
+      font-size: 16px;
       color: #7a6a53;
-      padding-top: 20px;
+      font-weight: bold;
     }
 
-    /* === The white frame — like Symboles88's canvas === */
+    /* === الإطار الأبيض الذي يحتوي على الـ Canvas === */
     .art-frame {
+      width: 100%;
       background: #ffffff;
-      border: 1px solid #e8e0cc;
-      border-radius: 8px;
-      padding: 12px;
-      box-shadow: 0 2px 10px rgba(0,0,0,.05);
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 100%;
-      min-height: 60px;
+      overflow: hidden;
     }
 
-    /* The rendered art canvas — auto-scales to fit the frame */
+    /* Canvas يأخذ عرض الإطار ويتجاوب كصورة حقيقية */
     .art-frame canvas {
       max-width: 100%;
       height: auto;
@@ -107,12 +101,13 @@
       background: transparent;
       color: #2c2c2c;
       border: 1px solid #2c2c2c;
-      padding: 6px 14px;
+      padding: 8px 16px;
       cursor: pointer;
       font-family: 'Times New Roman', Times, serif;
-      font-size: 13px;
+      font-size: 14px;
       text-transform: uppercase;
       letter-spacing: 1px;
+      border-radius: 4px;
       transition: all 0.2s;
     }
 
@@ -130,15 +125,16 @@
     .loading, .error {
       font-style: italic;
       color: #7a6a53;
-      padding: 30px 0;
+      padding: 50px 0;
       text-align: center;
+      font-size: 18px;
     }
     .error { color: #a94442; }
 
     footer {
-      margin-top: 40px;
-      padding-top: 15px;
-      border-top: 1px solid #2c2c2c;
+      margin-top: 60px;
+      padding-top: 20px;
+      border-top: 1px solid #d5c9b2;
       text-align: center;
       font-size: 13px;
       color: #7a6a53;
@@ -147,13 +143,8 @@
 
     @media (max-width: 600px) {
       body { padding: 20px 10px; }
-      .container { padding: 20px 15px; }
-      .catalog-header { display: none; }
-      .art-row { flex-direction: column; align-items: stretch; }
-      .col-id { width: 100%; margin-bottom: 10px; padding-top: 0; }
-      .col-content { padding: 0; }
-      .col-action { width: 100%; text-align: left; margin-top: 15px; }
-      .art-frame { padding: 8px; }
+      .art-card { padding: 15px; }
+      h1 { font-size: 32px; }
     }
   </style>
 </head>
@@ -165,18 +156,12 @@
       <div class="subtitle">ASCII Art Archive</div>
     </header>
 
-    <div class="catalog-header">
-      <div class="col-id">ID</div>
-      <div class="col-content">Artwork</div>
-      <div class="col-action">Action</div>
-    </div>
-
     <main id="artContainer">
       <div class="loading">Loading archive...</div>
     </main>
 
     <footer>
-      copyright : mohamed005cheikh@gmail.com | by MC88
+      Copyright : mohamed005cheikh@gmail.com | by MC88
     </footer>
   </div>
 
@@ -185,11 +170,10 @@
     const MAX_INDEX = 500;
     const MAX_MISSES = 3;
 
-    // Base font size used when drawing to canvas
-    // Higher = crisper when scaled down, more memory
-    const BASE_FONT_SIZE = 16;
-    const CHAR_W_RATIO = 0.6;   // monospace width per char (Courier New)
-    const LINE_H_RATIO = 1.1;   // line height
+    // نفس مقاسات ونسب Symboles88 بالضبط
+    const BASE_FONT_SIZE = 12; 
+    const CHAR_W_RATIO = 0.6;   
+    const LINE_H_RATIO = 1.1;   
 
     async function loadAll() {
       container.innerHTML = '';
@@ -220,79 +204,76 @@
     }
 
     function renderArt(art, idStr) {
-      const row = document.createElement('div');
-      row.className = 'art-row';
+      // بناء بطاقة العرض (Card)
+      const card = document.createElement('div');
+      card.className = 'art-card';
 
-      const idCol = document.createElement('div');
-      idCol.className = 'col-id art-id';
-      idCol.textContent = idStr;
+      // الرأس (يحتوي على الرقم وزر النسخ)
+      const header = document.createElement('div');
+      header.className = 'art-header';
 
-      const contentCol = document.createElement('div');
-      contentCol.className = 'col-content';
-
-      const frame = document.createElement('div');
-      frame.className = 'art-frame';
-
-      const canvas = document.createElement('canvas');
-      drawAsciiToCanvas(canvas, art);
-      frame.appendChild(canvas);
-      contentCol.appendChild(frame);
-
-      const actionCol = document.createElement('div');
-      actionCol.className = 'col-action';
+      const idSpan = document.createElement('span');
+      idSpan.className = 'art-id';
+      idSpan.textContent = idStr;
 
       const btn = document.createElement('button');
       btn.className = 'copy-btn';
-      btn.textContent = 'Copy';
+      btn.textContent = 'Copy Text';
       btn.addEventListener('click', () => {
         navigator.clipboard.writeText(art).then(() => {
           btn.textContent = 'Copied!';
           btn.classList.add('copied');
           setTimeout(() => {
-            btn.textContent = 'Copy';
+            btn.textContent = 'Copy Text';
             btn.classList.remove('copied');
           }, 1500);
         }).catch(() => {
           btn.textContent = 'Failed';
-          setTimeout(() => btn.textContent = 'Copy', 1500);
+          setTimeout(() => btn.textContent = 'Copy Text', 1500);
         });
       });
 
-      actionCol.appendChild(btn);
+      header.appendChild(idSpan);
+      header.appendChild(btn);
 
-      row.appendChild(idCol);
-      row.appendChild(contentCol);
-      row.appendChild(actionCol);
-      container.appendChild(row);
+      // منطقة عرض الـ Canvas (مثل Symboles88)
+      const frame = document.createElement('div');
+      frame.className = 'art-frame';
+
+      const canvas = document.createElement('canvas');
+      drawAsciiToCanvas(canvas, art);
+      
+      frame.appendChild(canvas);
+      card.appendChild(header);
+      card.appendChild(frame);
+      container.appendChild(card);
     }
 
-    // === Core: render ASCII text into a canvas — same approach as Symboles88 ===
+    // === دالة الرسم باستخدام نفس منطق Symboles88 ===
     function drawAsciiToCanvas(canvas, text) {
       const lines = text.split('\n');
       const cols = Math.max(1, ...lines.map(l => l.length));
       const rows = Math.max(1, lines.length);
 
       const fontSize = BASE_FONT_SIZE;
+      const charW = fontSize * CHAR_W_RATIO;
       const charH = fontSize * LINE_H_RATIO;
 
-      // Setup temporary context to measure character width precisely
       const ctx = canvas.getContext('2d');
-      ctx.font = fontSize + 'px "Courier New", Consolas, monospace';
-      const charW = ctx.measureText('M').width || (fontSize * CHAR_W_RATIO);
 
-      // Intrinsic canvas resolution
+      // تحديد أبعاد الـ canvas بناءً على عدد الحروف والأسطر
       canvas.width = Math.ceil(cols * charW);
       canvas.height = Math.ceil(rows * charH);
 
-      // Reapply font after resizing the canvas (canvas resize resets context state)
-      ctx.font = fontSize + 'px "Courier New", Consolas, monospace';
+      // إعدادات الخط والألوان
+      ctx.font = `${fontSize}px monospace`;
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      ctx.fillStyle = '#1a1a1a';
+      ctx.fillStyle = '#1a1a1a'; // لون النص (أسود داكن)
       ctx.textBaseline = 'top';
 
-      // Draw each line as one string — monospace handles spacing automatically
+      // رسم النص سطراً بسطر
       for (let y = 0; y < lines.length; y++) {
         const line = lines[y];
         if (!line) continue;
@@ -305,3 +286,4 @@
 
 </body>
 </html>
+
