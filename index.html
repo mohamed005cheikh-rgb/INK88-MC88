@@ -3,12 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- Updated Title with your new brand name -->
   <title>ink88 - ASCII Art</title>
   <style>
-    /* --- Classic Paper / Catalog Styling --- */
     body {
-      background-color: #fdf6e3; /* Vintage paper color */
+      background-color: #fdf6e3;
       color: #2c2c2c;
       font-family: 'Times New Roman', Times, serif;
       margin: 0;
@@ -25,7 +23,6 @@
       box-shadow: 2px 2px 10px rgba(0,0,0,0.05);
     }
 
-    /* --- Header --- */
     header {
       border-bottom: 2px solid #2c2c2c;
       margin-bottom: 20px;
@@ -38,7 +35,7 @@
       margin: 0;
       font-weight: normal;
       letter-spacing: 4px;
-      text-transform: lowercase; /* Gives it a modern, clean look */
+      text-transform: lowercase;
     }
 
     .subtitle {
@@ -49,7 +46,6 @@
       margin-top: 5px;
     }
 
-    /* --- Catalog Table Header --- */
     .catalog-header {
       display: flex;
       font-size: 14px;
@@ -62,17 +58,15 @@
       letter-spacing: 1px;
     }
 
-    /* Column widths */
-    .col-id { width: 80px; flex-shrink: 0; }
-    .col-content { flex-grow: 1; padding: 0 20px; overflow-x: auto; }
-    .col-action { width: 120px; flex-shrink: 0; text-align: right; }
+    .col-id { width: 70px; flex-shrink: 0; }
+    .col-content { flex-grow: 1; padding: 0 20px; min-width: 0; }
+    .col-action { width: 110px; flex-shrink: 0; text-align: right; }
 
-    /* --- Art Rows --- */
     .art-row {
       display: flex;
       border-bottom: 1px solid #e0d8c8;
-      padding: 15px 0;
-      align-items: center;
+      padding: 24px 0;
+      align-items: flex-start;
       transition: background 0.2s;
     }
 
@@ -84,21 +78,45 @@
       font-family: 'Courier New', monospace;
       font-size: 14px;
       color: #7a6a53;
+      padding-top: 20px;
     }
 
-    /* ASCII Art display */
+    /* === The white frame — like Symboles88's canvas === */
+    .art-frame {
+      background: #ffffff;
+      border: 1px solid #e8e0cc;
+      border-radius: 8px;
+      padding: 14px 16px;
+      box-shadow: 0 2px 10px rgba(0,0,0,.05);
+      max-width: 100%;
+      overflow: hidden;
+    }
+
     pre.ascii {
       font-family: 'Courier New', Consolas, monospace;
-      font-size: 13px;
-      line-height: 1.1;
-      margin: 0;
+      font-size: 7px;
+      line-height: 1.0;
+      margin: 0 auto;
       white-space: pre;
       color: #1a1a1a;
       text-align: left;
       direction: ltr;
+      display: block;
+      width: fit-content;
+      max-width: 100%;
+      overflow-x: auto;
+      scrollbar-width: thin;
     }
 
-    /* --- Copy Button --- */
+    pre.ascii::-webkit-scrollbar {
+      height: 6px;
+      width: 6px;
+    }
+    pre.ascii::-webkit-scrollbar-thumb {
+      background: #d5c9b2;
+      border-radius: 3px;
+    }
+
     .copy-btn {
       background: transparent;
       color: #2c2c2c;
@@ -123,15 +141,14 @@
       color: #fff;
     }
 
-    /* --- Loading & Error Messages --- */
     .loading, .error {
       font-style: italic;
       color: #7a6a53;
-      padding: 20px 0;
+      padding: 30px 0;
+      text-align: center;
     }
     .error { color: #a94442; }
 
-    /* --- Footer --- */
     footer {
       margin-top: 40px;
       padding-top: 15px;
@@ -142,13 +159,15 @@
       font-style: italic;
     }
 
-    /* --- Mobile Responsive --- */
     @media (max-width: 600px) {
+      body { padding: 20px 10px; }
+      .container { padding: 20px 15px; }
       .catalog-header { display: none; }
-      .art-row { flex-direction: column; align-items: flex-start; }
-      .col-id { width: 100%; margin-bottom: 10px; }
-      .col-content { padding: 0; width: 100%; overflow-x: auto; }
+      .art-row { flex-direction: column; align-items: stretch; }
+      .col-id { width: 100%; margin-bottom: 10px; padding-top: 0; }
+      .col-content { padding: 0; }
       .col-action { width: 100%; text-align: left; margin-top: 15px; }
+      pre.ascii { font-size: 5.5px; }
     }
   </style>
 </head>
@@ -166,77 +185,74 @@
       <div class="col-action">Action</div>
     </div>
 
-    <!-- Container where JavaScript will load the art -->
     <main id="artContainer">
       <div class="loading">Loading archive...</div>
     </main>
 
-    <!-- Footer with your requested copyright -->
     <footer>
       copyright : mohamed005cheikh@gmail.com | by MC88
     </footer>
   </div>
 
   <script>
-    // Separator used in artworks.txt to split different drawings
-    const SEPARATOR = '---';
     const container = document.getElementById('artContainer');
+    const MAX_INDEX = 500;   // highest number to try
+    const MAX_MISSES = 3;    // stop after 3 missing files in a row
 
-    // Fetch the text file and process it
-    fetch('artworks.txt')
-      .then(res => {
-        if (!res.ok) throw new Error('File not found');
-        return res.text();
-      })
-      .then(text => {
-        // Split the text by the separator, trim empty lines, and remove empty entries
-        const artworks = text
-          .split(SEPARATOR)
-          .map(a => a.replace(/^\n+|\n+$/g, ''))
-          .filter(a => a.length > 0);
+    async function loadAll() {
+      container.innerHTML = '';
+      let found = 0;
+      let misses = 0;
 
-        container.innerHTML = '';
-        
-        // Render each artwork
-        artworks.forEach((art, index) => {
-          // Create an ID like #001, #002
-          const idStr = `#${String(index + 1).padStart(3, '0')}`;
-          renderArt(art, idStr);
-        });
-      })
-      .catch(err => {
-        console.error(err);
-        container.innerHTML = '<div class="error">Could not load artworks.txt. Make sure you are running this via a local server or GitHub Pages.</div>';
-      });
+      for (let i = 1; i <= MAX_INDEX && misses < MAX_MISSES; i++) {
+        try {
+          const res = await fetch(i + '.txt', { cache: 'no-cache' });
+          if (!res.ok) throw new Error('miss');
+          const text = (await res.text()).replace(/\r\n/g, '\n');
+          if (text.trim().length > 0) {
+            renderArt(text.replace(/\n+$/, ''), '#' + String(i).padStart(3, '0'));
+            found++;
+            misses = 0;
+          } else {
+            misses++;
+          }
+        } catch (e) {
+          misses++;
+        }
+      }
 
-    // Function to render a single art row
+      if (found === 0) {
+        container.innerHTML =
+          '<div class="error">No artworks found.<br>Add files named <b>1.txt</b>, <b>2.txt</b>, <b>3.txt</b>, ...</div>';
+      }
+    }
+
     function renderArt(art, idStr) {
       const row = document.createElement('div');
       row.className = 'art-row';
 
-      // ID Column
       const idCol = document.createElement('div');
       idCol.className = 'col-id art-id';
       idCol.textContent = idStr;
 
-      // Content Column
       const contentCol = document.createElement('div');
       contentCol.className = 'col-content';
-      
+
+      const frame = document.createElement('div');
+      frame.className = 'art-frame';
+
       const pre = document.createElement('pre');
       pre.className = 'ascii';
       pre.textContent = art;
-      contentCol.appendChild(pre);
+      frame.appendChild(pre);
+      contentCol.appendChild(frame);
 
-      // Action Column (Copy Button)
       const actionCol = document.createElement('div');
       actionCol.className = 'col-action';
 
       const btn = document.createElement('button');
       btn.className = 'copy-btn';
       btn.textContent = 'Copy';
-
-      // Copy to clipboard functionality
       btn.addEventListener('click', () => {
         navigator.clipboard.writeText(art).then(() => {
           btn.textContent = 'Copied!';
@@ -253,13 +269,13 @@
 
       actionCol.appendChild(btn);
 
-      // Append all columns to the row
       row.appendChild(idCol);
       row.appendChild(contentCol);
       row.appendChild(actionCol);
-
       container.appendChild(row);
     }
+
+    loadAll();
   </script>
 
 </body>
