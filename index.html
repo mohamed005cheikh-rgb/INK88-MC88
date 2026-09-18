@@ -1,286 +1,414 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ink88 - ASCII Art Gallery</title>
-  <style>
-    body {
-      background-color: #fdf6e3;
-      color: #2c2c2c;
-      font-family: 'Times New Roman', Times, serif;
-      margin: 0;
-      padding: 40px 20px;
-      line-height: 1.5;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ink88 - The ASCII Archive</title>
+    
+    <!-- Importing Classic Poetic Fonts and Monospace for Art -->
+    <link href="https://fonts.googleapis.com/css2?family=Tangerine:wght@400;700&family=Courier+Prime&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- THEME VARIABLES (Vintage Parchment & Ink) --- */
+        :root {
+            --bg-paper: #fdfbf7;
+            --ink-dark: #2c241b;
+            --ink-light: #5c4d3c;
+            --gold-accent: #b89768;
+            --card-shadow: 0 10px 30px rgba(44, 36, 27, 0.08);
+            --transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
 
-    .container {
-      max-width: 800px;
-      margin: 0 auto;
-    }
+        /* --- GLOBAL RESET --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    header {
-      text-align: center;
-      margin-bottom: 40px;
-    }
+        body {
+            background-color: var(--bg-paper);
+            color: var(--ink-dark);
+            font-family: 'Tangerine', cursive;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            /* Subtle paper texture using radial gradient */
+            background-image: radial-gradient(circle at center, #ffffff 0%, var(--bg-paper) 100%);
+        }
 
-    h1 {
-      font-size: 42px;
-      margin: 0;
-      font-weight: normal;
-      letter-spacing: 6px;
-      text-transform: lowercase;
-      color: #1a1a1a;
-    }
+        /* --- SPLASH SCREEN (PRE-LOADER) --- */
+        #splash-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg-paper);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: opacity 1s ease-in-out, visibility 1s;
+        }
 
-    .subtitle {
-      font-size: 15px;
-      color: #7a6a53;
-      letter-spacing: 4px;
-      text-transform: uppercase;
-      margin-top: 10px;
-      border-bottom: 1px solid #d5c9b2;
-      padding-bottom: 20px;
-      display: inline-block;
-    }
+        .splash-text {
+            font-size: 3rem;
+            color: var(--gold-accent);
+            margin-top: 20px;
+            opacity: 0;
+            animation: fadeIn 2s ease-in-out 3s forwards;
+        }
 
-    .art-card {
-      background: #ffffff;
-      border: 1px solid #d5c9b2;
-      border-radius: 12px;
-      padding: 24px;
-      margin-bottom: 40px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.03);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      transition: box-shadow 0.3s;
-    }
+        .splash-hint {
+            font-size: 1.5rem;
+            color: var(--ink-light);
+            margin-top: 10px;
+            opacity: 0;
+            animation: fadeIn 2s ease-in-out 4s forwards;
+        }
 
-    .art-card:hover {
-      box-shadow: 0 8px 25px rgba(0,0,0,0.06);
-    }
+        /* Feather SVG Animation */
+        .feather-svg {
+            width: 120px;
+            height: 120px;
+            stroke: var(--ink-dark);
+            stroke-width: 1.5;
+            fill: none;
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
+            animation: drawLine 4s ease-in-out forwards;
+        }
 
-    .art-header {
-      width: 100%;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-      padding-bottom: 15px;
-      border-bottom: 1px dashed #e0d8c8;
-    }
+        @keyframes drawLine {
+            to { stroke-dashoffset: 0; }
+        }
 
-    .art-id {
-      font-family: 'Courier New', monospace;
-      font-size: 16px;
-      color: #7a6a53;
-      font-weight: bold;
-    }
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
 
-    .art-frame {
-      width: 100%;
-      background: #ffffff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-    }
+        /* --- HEADER --- */
+        header {
+            text-align: center;
+            padding: 60px 20px 30px;
+            position: relative;
+        }
 
-    .art-frame canvas {
-      max-width: 100%;
-      height: auto;
-      display: block;
-      border-radius: 4px;
-    }
+        /* Decorative SVG behind title */
+        header::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 300px;
+            height: 100px;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 20"><path d="M0,10 Q25,20 50,10 T100,10" fill="none" stroke="%23b89768" stroke-width="0.5" opacity="0.4"/></svg>') no-repeat center;
+            z-index: -1;
+        }
 
-    .copy-btn {
-      background: transparent;
-      color: #2c2c2c;
-      border: 1px solid #2c2c2c;
-      padding: 8px 16px;
-      cursor: pointer;
-      font-family: 'Times New Roman', Times, serif;
-      font-size: 14px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      border-radius: 4px;
-      transition: all 0.2s;
-    }
+        h1 {
+            font-size: 5rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            line-height: 1;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.05);
+        }
 
-    .copy-btn:hover {
-      background: #2c2c2c;
-      color: #fdf6e3;
-    }
+        header p {
+            font-size: 2.5rem;
+            color: var(--ink-light);
+        }
 
-    .copy-btn.copied {
-      background: #7a6a53;
-      border-color: #7a6a53;
-      color: #fff;
-    }
+        /* --- GALLERY LAYOUT --- */
+        .gallery-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 50px;
+            flex: 1;
+        }
 
-    .loading, .error {
-      font-style: italic;
-      color: #7a6a53;
-      padding: 50px 0;
-      text-align: center;
-      font-size: 18px;
-    }
-    .error { color: #a94442; }
+        /* --- ART CARDS --- */
+        .art-card {
+            background: #ffffff;
+            border: 1px solid rgba(184, 151, 104, 0.3);
+            border-radius: 4px;
+            padding: 40px;
+            box-shadow: var(--card-shadow);
+            position: relative;
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow: hidden;
+        }
 
-    footer {
-      margin-top: 60px;
-      padding-top: 20px;
-      border-top: 1px solid #d5c9b2;
-      text-align: center;
-      font-size: 13px;
-      color: #7a6a53;
-      font-style: italic;
-    }
+        /* Hover floating effect */
+        .art-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(44, 36, 27, 0.12);
+            border-color: var(--gold-accent);
+        }
 
-    @media (max-width: 600px) {
-      body { padding: 20px 10px; }
-      .art-card { padding: 15px; }
-      h1 { font-size: 32px; }
-    }
-  </style>
+        /* Decorative Corner Ornaments */
+        .art-card::before, .art-card::after {
+            content: '✒';
+            position: absolute;
+            font-family: serif;
+            color: var(--gold-accent);
+            opacity: 0.3;
+            font-size: 1.2rem;
+        }
+        
+        .art-card::before { top: 15px; left: 15px; }
+        .art-card::after { bottom: 15px; right: 15px; transform: rotate(180deg); }
+
+        .card-header {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .card-header::after {
+            content: '';
+            position: absolute;
+            bottom: -15px;
+            width: 50px;
+            height: 1px;
+            background-color: var(--gold-accent);
+            opacity: 0.5;
+        }
+
+        .art-number {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--ink-light);
+        }
+
+        /* The ASCII Display - MUST be monospace */
+        .ascii-display {
+            font-family: 'Courier Prime', monospace; /* Monospace for perfect alignment */
+            font-size: 10px;
+            line-height: 10px;
+            white-space: pre;
+            text-align: center;
+            color: var(--ink-dark);
+            overflow-x: auto;
+            max-width: 100%;
+            padding: 20px;
+            background: rgba(0,0,0,0.01);
+            border-radius: 4px;
+        }
+
+        @media (max-width: 600px) {
+            .ascii-display {
+                font-size: 6px;
+                line-height: 6px;
+            }
+        }
+
+        /* --- ELEGANT COPY BUTTON --- */
+        .btn-copy {
+            margin-top: 35px;
+            background: transparent;
+            color: var(--ink-dark);
+            border: 1px solid var(--ink-light);
+            padding: 8px 30px;
+            font-family: 'Tangerine', cursive;
+            font-size: 2.2rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+            border-radius: 2px;
+        }
+
+        .btn-copy:hover {
+            background: var(--ink-dark);
+            color: var(--bg-paper);
+            border-color: var(--ink-dark);
+        }
+
+        .btn-copy:active {
+            transform: scale(0.95);
+        }
+
+        /* --- FOOTER --- */
+        footer {
+            text-align: center;
+            padding: 40px;
+            font-size: 2rem;
+            color: var(--ink-light);
+            margin-top: auto;
+        }
+
+        footer span {
+            color: var(--gold-accent);
+        }
+
+    </style>
 </head>
 <body>
 
-  <div class="container">
+    <!-- 6-SECOND SPLASH SCREEN (Click to skip) -->
+    <div id="splash-screen">
+        <!-- Elegant SVG Feather/Quill Drawing -->
+        <svg class="feather-svg" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"></path>
+            <line x1="16" y1="8" x2="2" y2="22"></line>
+            <line x1="17.5" y1="15" x2="9" y2="15"></line>
+        </svg>
+        <div class="splash-text">ink88</div>
+        <div class="splash-hint">Click anywhere to skip</div>
+    </div>
+
+    <!-- MAIN CONTENT -->
     <header>
-      <h1>ink88</h1>
-      <div class="subtitle">ASCII Art Archive</div>
+        <h1>ink88</h1>
+        <p>An Exclusive Collection of 1-Bit Text Art</p>
     </header>
 
-    <main id="artContainer">
-      <div class="loading">Loading archive...</div>
+    <main class="gallery-container" id="gallery">
+        <!-- Cards will be injected here by JavaScript -->
+        
+        <!-- FALLBACK/DEMO CARD (If local files fail to load) -->
+        <noscript>
+            <div class="art-card">
+                <div class="card-header">
+                    <span class="art-number">#001</span>
+                </div>
+                <pre class="ascii-display">
+       ██████████       
+     ██          ██     
+   ██  ██      ██  ██   
+   ██  ██      ██  ██   
+   ██              ██   
+   ██  ██      ██  ██   
+     ██  ██████  ██     
+       ██████████       
+                </pre>
+                <button class="btn-copy">Please Enable Javascript</button>
+            </div>
+        </noscript>
     </main>
 
     <footer>
-      Copyright : mohamed005cheikh@gmail.com | by MC88
+        Curated with passion by <span>MC88</span><br>
+        mohamed005cheikh@gmail.com
     </footer>
-  </div>
 
-  <script>
-    const container = document.getElementById('artContainer');
-    const MAX_INDEX = 500;
-    const MAX_MISSES = 3;
+    <script>
+        // --- SPLASH SCREEN LOGIC ---
+        const splashScreen = document.getElementById('splash-screen');
+        
+        // Hide splash function
+        const hideSplash = () => {
+            splashScreen.style.opacity = '0';
+            setTimeout(() => {
+                splashScreen.style.display = 'none';
+            }, 1000); // Wait for fade out transition
+        };
 
-    async function loadAll() {
-      container.innerHTML = '';
-      let found = 0;
-      let misses = 0;
+        // 1. Auto-hide after 6 seconds
+        const splashTimeout = setTimeout(hideSplash, 6000);
 
-      for (let i = 1; i <= MAX_INDEX && misses < MAX_MISSES; i++) {
-        try {
-          // جلب الملف النصي
-          const res = await fetch(i + '.txt', { cache: 'no-cache' });
-          if (!res.ok) throw new Error('miss');
-          const text = (await res.text()).replace(/\r\n/g, '\n');
-          
-          if (text.trim().length > 0) {
-            renderArt(text.replace(/\n+$/, ''), '#' + String(i).padStart(3, '0'));
-            found++;
-            misses = 0;
-          } else {
-            misses++;
-          }
-        } catch (e) {
-          misses++;
-        }
-      }
-
-      if (found === 0) {
-        container.innerHTML =
-          '<div class="error">No artworks found.<br>Add files named <b>1.txt</b>, <b>2.txt</b>, <b>3.txt</b>, ...</div>';
-      }
-    }
-
-    function renderArt(art, idStr) {
-      const card = document.createElement('div');
-      card.className = 'art-card';
-
-      const header = document.createElement('div');
-      header.className = 'art-header';
-
-      const idSpan = document.createElement('span');
-      idSpan.className = 'art-id';
-      idSpan.textContent = idStr;
-
-      const btn = document.createElement('button');
-      btn.className = 'copy-btn';
-      btn.textContent = 'Copy Text';
-      btn.addEventListener('click', () => {
-        navigator.clipboard.writeText(art).then(() => {
-          btn.textContent = 'Copied!';
-          btn.classList.add('copied');
-          setTimeout(() => {
-            btn.textContent = 'Copy Text';
-            btn.classList.remove('copied');
-          }, 1500);
+        // 2. Click to skip
+        splashScreen.addEventListener('click', () => {
+            clearTimeout(splashTimeout); // Cancel the auto-timer
+            hideSplash();
         });
-      });
 
-      header.appendChild(idSpan);
-      header.appendChild(btn);
 
-      const frame = document.createElement('div');
-      frame.className = 'art-frame';
+        // --- GALLERY FETCHING LOGIC ---
+        // Define the array of text files to load. Add '3.txt', '4.txt', etc. here.
+        const filesToLoad = ['1.txt', '2.txt'];
+        const gallery = document.getElementById('gallery');
 
-      const canvas = document.createElement('canvas');
-      drawAsciiToCanvas(canvas, art);
-      
-      frame.appendChild(canvas);
-      card.appendChild(header);
-      card.appendChild(frame);
-      container.appendChild(card);
-    }
+        // Function to create a beautifully styled card
+        function createCard(idNumber, textContent) {
+            const formattedNumber = '#' + String(idNumber).padStart(3, '0');
+            
+            const card = document.createElement('div');
+            card.className = 'art-card';
+            
+            // Header
+            const header = document.createElement('div');
+            header.className = 'card-header';
+            const numberSpan = document.createElement('span');
+            numberSpan.className = 'art-number';
+            numberSpan.textContent = formattedNumber;
+            header.appendChild(numberSpan);
 
-    // === دالة الرسم المعدلة (مطابقة تماماً لمنطق Symboles88) ===
-    function drawAsciiToCanvas(canvas, text) {
-      const lines = text.split('\n');
-      const cols = Math.max(1, ...lines.map(l => l.length));
-      const rows = Math.max(1, lines.length);
+            // The Art Display
+            const pre = document.createElement('pre');
+            pre.className = 'ascii-display';
+            pre.textContent = textContent;
 
-      // نفس المقاسات الموجودة في مشروعك الأول
-      const fontSize = 12;
-      const charWidth = fontSize * 0.6;
-      const charHeight = fontSize * 1.1;
+            // Copy Button
+            const btn = document.createElement('button');
+            btn.className = 'btn-copy';
+            btn.textContent = 'Copy to Clipboard';
 
-      const ctx = canvas.getContext('2d');
+            // Copy Event Listener
+            btn.addEventListener('click', () => {
+                navigator.clipboard.writeText(textContent).then(() => {
+                    const originalText = btn.textContent;
+                    btn.textContent = 'Captured!';
+                    btn.style.color = 'var(--gold-accent)';
+                    
+                    setTimeout(() => {
+                        btn.textContent = originalText;
+                        btn.style.color = '';
+                    }, 2000);
+                }).catch(err => {
+                    console.error('Failed to copy', err);
+                    alert('Clipboard access denied.');
+                });
+            });
 
-      canvas.width = Math.ceil(cols * charWidth);
-      canvas.height = Math.ceil(rows * charHeight);
+            // Assemble Card
+            card.appendChild(header);
+            card.appendChild(pre);
+            card.appendChild(btn);
 
-      // خلفية بيضاء
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      ctx.font = `${fontSize}px monospace`;
-      ctx.fillStyle = '#1a1a1a';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-
-      // السر هنا: رسم النص حرفاً بحرف في إحداثيات دقيقة (Grid)
-      for (let y = 0; y < rows; y++) {
-        const line = lines[y] || '';
-        for (let x = 0; x < cols; x++) {
-          const char = line[x];
-          
-          // نتجاهل المسافات الفارغة لتسريع الأداء، ونرسم الرموز فقط في مكانها الصحيح
-          if (char && char !== ' ') {
-            const posX = (x * charWidth) + (charWidth / 2);
-            const posY = (y * charHeight) + (charHeight / 2);
-            ctx.fillText(char, posX, posY);
-          }
+            return card;
         }
-      }
-    }
 
-    loadAll();
-  </script>
+        // Fetch all files and build the gallery
+        async function loadGallery() {
+            for (let i = 0; i < filesToLoad.length; i++) {
+                try {
+                    const response = await fetch(filesToLoad[i]);
+                    if (response.ok) {
+                        const text = await response.text();
+                        // Ignore empty files
+                        if (text.trim().length > 0) {
+                            const card = createCard(i + 1, text);
+                            gallery.appendChild(card);
+                        }
+                    } else {
+                        console.warn(`File ${filesToLoad[i]} not found. Skipping.`);
+                    }
+                } catch (error) {
+                    console.error(`Error loading ${filesToLoad[i]}:`, error);
+                }
+            }
+        }
 
+        // Initialize fetching
+        loadGallery();
+    </script>
 </body>
 </html>
 
