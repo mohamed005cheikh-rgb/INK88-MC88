@@ -1,0 +1,8 @@
+Act as an expert Minimalist ASCII Artist. I have attached an image, and I need you to convert its main subject into a clean, 1-bit ASCII art silhouette. 
+
+Here are the strict rules for the output to fit my specific gallery archive:
+1. Use ONLY two characters: the solid block '█' (or '#') for the subject/dark areas, and empty space ' ' for the background/light areas.
+2. The width of the ASCII art MUST NOT exceed 40 to 50 characters to ensure it displays correctly on mobile screens.
+3. Focus ONLY on the main subject or silhouette. Ignore all background elements, noise, and complex internal details. We want a clear, recognizable minimalist icon.
+4. Ensure the aspect ratio looks correct and not stretched.
+5. Do not include any explanations, greetings, or extra text. Output ONLY the raw ASCII art inside a code block.
